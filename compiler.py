@@ -68,7 +68,7 @@ def p_statement_declare_int(p):
         names[p[2]] = { "type": "INT", "value":p[3]}
 
 def p_statement_declare_float(p):
-    'statement : FLOATDEC NAME is_assign'
+    'statement : FLOATDEC NAME is_assing'
     names[p[2]] = { "type": "FLOAT", "value":p[3]}
     print(p)
 
