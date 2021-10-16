@@ -1,26 +1,17 @@
-import ply.yacc as yacc
-import ply.lex as lex
+import sys
+sys.path.insert(0, "../.ply")
 
+tokens = (
+    'NAME', 'INUMBER', 'FNUMBER'
+)
 
-
-literals = ['=', '+', '-', '*', '/', '(', ')']
-reserved = { 
-    'int' : 'INTDEC',
-    'float' : 'FLOATDEC',
-    'print' : 'PRINT'
- }
-
-tokens = [
-    'INUMBER', 'FNUMBER', 'NAME'
-] + list(reserved.values())
-
+literals = ['=', '+', '-', 'i', 'f', 'p', '*', '/']
 
 # Tokens
 
-def t_NAME(t):
-    r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = reserved.get(t.value,'NAME')    # Check for reserved words
-    return t
+t_NAME = r'[a-eg-hj-oq-z]'
+
+
 
 def t_FNUMBER(t):
     r'\d+\.\d+'
@@ -45,6 +36,7 @@ def t_error(t):
     t.lexer.skip(1)
 
 # Build the lexer
+import lex as lex
 lexer = lex.lex()
 
 # Parsing rules
@@ -59,45 +51,17 @@ precedence = (
 names = {}
 abstractTree = []
 
-class Node:
-    childrens=[]
-    val=''
-    type=''
-    def __init__(self, val, type, childrens):
-        self.val=val
-        self.type=type
-        self.childrens=childrens
-
 def p_statement_declare_int(p):
-    '''statement : INTDEC NAME is_assing
-    '''
-    if type(p[3])==float:
-        print("no se puede asignar flotantes a enteros")
-    else:
-        varname = Node(p[2],'INT',[])
-        n = Node(p[3],'=', [varname, p[3]])
-        abstractTree.append(n)
-        #names[p[2]] = { "type": "INT", "value":p[3]}
+    'statement : "i" NAME'
+    names[p[2]] = { "type": "INT", "value":0}
 
 def p_statement_declare_float(p):
-    'statement : FLOATDEC NAME is_assing'
-    names[p[2]] = { "type": "FLOAT", "value":p[3]}
-    print(p)
-
-def p_is_assing(p):
-    '''is_assing : "=" expression 
-                | '''
-    #p[0] = 0
-    p[0] = Node(0, 'INT',[])
-    if len(p)>2:
-        p[0].type = p[2].type
-        p[0].val = p[2].val
-        p[0].childrens = [p[2]]
-        #p[0] = p[2]
+    'statement : "f" NAME'
+    names[p[2]] = { "type": "FLOAT", "value":0}
 
 def p_statement_print(p):
-    '''statement : PRINT '(' expression ')' '''
-    print(p[3])
+    'statement : "p" expression'
+    print(p[2])
 
 def p_statement_assign(p):
     'statement : NAME "=" expression'
@@ -134,8 +98,7 @@ def p_expression_group(p):
 
 def p_expression_inumber(p):
     "expression : INUMBER"
-    #p[0] = p[1]
-    p[0] = Node(p[1], 'INT',[])
+    p[0] = p[1]
 
 
 def p_expression_fnumber(p):
@@ -154,23 +117,14 @@ def p_expression_name(p):
 
 def p_error(p):
     if p:
-        print(p)
-        print("Syntax error at line '%s' character '%s'" % (p.lineno, p.lexpos) )
+        print("Syntax error at '%s'" % p.value)
     else:
         print("Syntax error at EOF")
 
-
+import yacc as yacc
 parser = yacc.yacc()
 
-while True:
-    try:
-        s = input('Nombre de archivo:\n ')
-        file = open(s,"r")
-    except EOFError:
-        break
-    if not s:
-        continue
-    line = file.readline()
-    while(line):
-        yacc.parse(line)
-        line=file.readline()
+
+f = open("code2.txt")
+content = f.read()
+yacc.parse(content)
