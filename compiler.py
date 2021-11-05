@@ -3,15 +3,17 @@ import ply.lex as lex
 
 
 
-literals = ['=', '+', '-', '*', '/', '(', ')']
+literals = ['=', '+', '-', '*', '/', '(', ')','"', ';']
 reserved = { 
     'int' : 'INTDEC',
     'float' : 'FLOATDEC',
-    'print' : 'PRINT'
+    'print' : 'PRINT',
+    'boolean' : 'BOOLDEC',
+    'string' : 'STRINGDEC'
  }
 
 tokens = [
-    'INUMBER', 'FNUMBER', 'NAME'
+    'INUMBER', 'FNUMBER', 'NAME', 'STRING', 'BOOLEAN'
 ] + list(reserved.values())
 
 
@@ -33,6 +35,12 @@ def t_INUMBER(t):
     t.value = int(t.value)
     return t
 
+def t_STRING(t):
+    r'".*"'
+    return t
+
+def t_BOOLEAN(t):
+    r'false | true'
 
 t_ignore = " \t"
 
@@ -63,26 +71,30 @@ class Node:
     childrens=[]
     val=''
     type=''
-    def __init__(self, val, type, childrens):
+    def __init__(self, val, type, childrens=[]):
         self.val=val
         self.type=type
         self.childrens=childrens
 
 def p_statement_declare_int(p):
-    '''statement : INTDEC NAME is_assing
+    '''statement : INTDEC NAME is_assing ';'
     '''
     if type(p[3])==float:
         print("no se puede asignar flotantes a enteros")
     else:
+        names[p[2]] = { "type": "INT", "value":p[3].val}
         varname = Node(p[2],'INT',[])
         n = Node(p[3],'=', [varname, p[3]])
         abstractTree.append(n)
         #names[p[2]] = { "type": "INT", "value":p[3]}
 
 def p_statement_declare_float(p):
-    'statement : FLOATDEC NAME is_assing'
-    names[p[2]] = { "type": "FLOAT", "value":p[3]}
-    print(p)
+    '''statement : FLOATDEC NAME is_assing ';' '''
+    names[p[2]] = { "type": "FLOAT", "value":p[3].val}
+    varname = Node(p[2],'FLOAT',[])
+    n = Node(p[3],'=', [varname, p[3]])
+    abstractTree.append(n)
+    #print(p)
 
 def p_is_assing(p):
     '''is_assing : "=" expression 
@@ -95,9 +107,27 @@ def p_is_assing(p):
         p[0].childrens = [p[2]]
         #p[0] = p[2]
 
+def p_statement_declare_string(p):
+    '''statement : STRINGDEC NAME is_assign_s ';' '''
+    names[p[2]] = { "type": "STRING", "value":p[3].val}
+    varname = Node(p[2],'STRING',[])
+    n = Node(p[3],'=', [varname, p[3]])
+    abstractTree.append(n)
+
+def p_is_assing_s(p):
+    '''is_assign_s : "=" expression_s
+                    | '''
+    p[0] = Node("", 'STRING')
+    if len(p)>2:
+        p[0].type = p[2].type
+        p[0].val = p[2].val
+        p[0].childrens = [p[2]]
+
 def p_statement_print(p):
-    '''statement : PRINT '(' expression ')' '''
-    print(p[3])
+    '''statement : PRINT '(' expression ')' ';' '''
+    n = Node(p[3],'PRINT', [p[3]])
+    abstractTree.append(n)
+    print(p[3].val)
 
 def p_statement_assign(p):
     'statement : NAME "=" expression'
@@ -107,7 +137,8 @@ def p_statement_assign(p):
 
 
 def p_statement_expr(p):
-    'statement : expression'
+    '''statement : expression
+                  | expression_s'''
     # print(p[1])
 
 
@@ -115,42 +146,73 @@ def p_expression_binop(p):
     '''expression : expression '+' expression
                   | expression '-' expression
                   | expression '*' expression
-                  | expression '/' expression'''
+                  | expression '/' expression
+                  | expression '^' expression'''
     if p[2] == '+':
-        p[0] = p[1] + p[3]
+        p[0] = Node('+','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] + p[3]
     elif p[2] == '-':
-        p[0] = p[1] - p[3]
+        p[0] = Node('-','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] - p[3]
+    elif p[2] == '*':
+        p[0] = Node('*','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] * p[3]
+    elif p[2] == '/':
+        p[0] = Node('/','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] / p[3]
+    elif p[2] == '^':
+        p[0] = Node('^','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] ** p[3]
 
 
 def p_expression_uminus(p):
     "expression : '-' expression %prec UMINUS"
-    p[0] = -p[2]
+    p[0] = Node(-p[2].val,p[2].type,p[2].childrens)
+    #p[0] = -p[2]
 
 
 def p_expression_group(p):
     "expression : '(' expression ')'"
-    p[0] = p[2]
+    p[0] = Node(p[2].val,p[2].type,p[2].children)
 
 
 def p_expression_inumber(p):
     "expression : INUMBER"
     #p[0] = p[1]
-    p[0] = Node(p[1], 'INT',[])
+    p[0] = Node(p[1], 'INT')
 
 
 def p_expression_fnumber(p):
     "expression : FNUMBER"
-    p[0] = p[1]
+    #p[0] = p[1]
+    p[0] = Node(p[1], 'FLOAT')
 
 
 def p_expression_name(p):
     "expression : NAME"
     try:
         p[0] = names[p[1]]["value"]
+        p[0] = Node(p[1],"ID")
     except LookupError:
         print("Undefined name '%s'" % p[1])
         p[0] = 0
 
+def p_expression_s_multiple(p):
+    '''expression_s : expression_s '+' expression_s'''
+    p[0] = Node('+','CONCATENACION',[p[1],p[3]])
+
+def p_expression_s_string(p):
+    'expression_s : STRING'
+    p[0] = Node(p[1],'STRING')
+
+def p_expression_s_name(p):
+    "expression_s : NAME"
+    try:
+        p[0] = names[p[1]]["value"]
+        p[0] = Node(p[1],"ID")
+    except LookupError:
+        print("Undefined name '%s'" % p[1])
+        p[0] = 0
 
 def p_error(p):
     if p:
@@ -161,8 +223,9 @@ def p_error(p):
 
 
 parser = yacc.yacc()
-
-while True:
+i=0
+while i<1:
+    i=i+1
     try:
         s = input('Nombre de archivo:\n ')
         file = open(s,"r")
