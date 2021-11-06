@@ -300,7 +300,11 @@ def p_expression_b_name(p):
         p[0] = 0
 
 def p_expression_s_multiple(p):
-    '''expression_s : expression_s '+' expression_s'''
+    '''expression_s : expression_s '+' expression_s
+                    | expression_s '+' expression
+                    | expression_s '+' expression_b
+                    | expression '+' expression_s
+                    | expression_b '+' expression_s '''
     p[0] = Node('+','CONCATENACION',[p[1],p[3]])
 
 def p_expression_s_string(p):
