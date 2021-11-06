@@ -65,7 +65,7 @@ precedence = (
 
 # dictionary of names
 names = {}
-abstractTree = []
+
 
 class Node:
     childrens=[]
@@ -75,6 +75,16 @@ class Node:
         self.val=val
         self.type=type
         self.childrens=childrens
+    
+    def printTree(self, node, lv):
+        if lv<10:
+            print(" "*lv + str(node.val))
+        #print(lv)
+        l = node.childrens.copy()
+        for n in l:
+            self.printTree(n,lv+1)
+
+abstractTree = Node("inicio","inicio")
 
 def p_statement_declare_int(p):
     '''statement : INTDEC NAME is_assing ';'
@@ -83,24 +93,24 @@ def p_statement_declare_int(p):
         print("no se puede asignar flotantes a enteros")
     else:
         names[p[2]] = { "type": "INT", "value":p[3].val}
-        varname = Node(p[2],'INT',[])
-        n = Node(p[3],'=', [varname, p[3]])
-        abstractTree.append(n)
+        varname = Node(p[2],'INT')
+        n = Node('assign','=', [varname, p[3]])
+        abstractTree.childrens.append(n)
         #names[p[2]] = { "type": "INT", "value":p[3]}
 
 def p_statement_declare_float(p):
     '''statement : FLOATDEC NAME is_assing ';' '''
     names[p[2]] = { "type": "FLOAT", "value":p[3].val}
-    varname = Node(p[2],'FLOAT',[])
-    n = Node(p[3],'=', [varname, p[3]])
-    abstractTree.append(n)
+    varname = Node(p[2],'FLOAT')
+    n = Node('assign','=', [varname, p[3]])
+    abstractTree.childrens.append(n)
     #print(p)
 
 def p_is_assing(p):
     '''is_assing : "=" expression 
                 | '''
     #p[0] = 0
-    p[0] = Node(0, 'INT',[])
+    p[0] = Node(0, 'INT')
     if len(p)>2:
         p[0].type = p[2].type
         p[0].val = p[2].val
@@ -110,9 +120,9 @@ def p_is_assing(p):
 def p_statement_declare_string(p):
     '''statement : STRINGDEC NAME is_assign_s ';' '''
     names[p[2]] = { "type": "STRING", "value":p[3].val}
-    varname = Node(p[2],'STRING',[])
-    n = Node(p[3],'=', [varname, p[3]])
-    abstractTree.append(n)
+    varname = Node(p[2],'STRING')
+    n = Node('assign','=', [varname, p[3]])
+    abstractTree.childrens.append(n)
 
 def p_is_assing_s(p):
     '''is_assign_s : "=" expression_s
@@ -126,19 +136,28 @@ def p_is_assing_s(p):
 def p_statement_print(p):
     '''statement : PRINT '(' expression ')' ';' '''
     n = Node(p[3],'PRINT', [p[3]])
-    abstractTree.append(n)
+    abstractTree.childrens.append(n)
     print(p[3].val)
 
 def p_statement_assign(p):
-    'statement : NAME "=" expression'
+    '''statement : NAME "=" expression ';' '''
     if p[1] not in names:
         print ( "You must declare a variable before using it")
     names[p[1]]["value"] = p[3]
+    id = Node(p[1],'ID')
+    n = Node('=','ASSIGN',[id,p[3]])
 
+def p_statement_assign_string(p):
+    '''statement : NAME "=" expression_s ';' '''
+    if p[1] not in names:
+        print ( "You must declare a variable before using it")
+    names[p[1]]["value"] = p[3]
+    id = Node(p[1],'ID')
+    n = Node('=','ASSIGN',[id,p[3]])
 
 def p_statement_expr(p):
-    '''statement : expression
-                  | expression_s'''
+    '''statement : expression ';'
+                  | expression_s ';' '''
     # print(p[1])
 
 
@@ -237,3 +256,5 @@ while i<1:
     while(line):
         yacc.parse(line)
         line=file.readline()
+    i=i+1
+    #abstractTree.printTree(abstractTree,0)

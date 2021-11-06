@@ -1,5 +1,4 @@
 float a = 3;
-int b;
+string b;
+b = "hola";
 print(a);
-string as = "hola";
-print(as);
