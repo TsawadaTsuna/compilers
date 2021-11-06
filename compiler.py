@@ -1,15 +1,19 @@
 import ply.yacc as yacc
 import ply.lex as lex
 
-
-
-literals = ['=', '+', '-', '*', '/', '(', ')','"', ';']
+literals = ['=', '+', '-', '*', '/', '(', ')','"', ';','<','>']
 reserved = { 
     'int' : 'INTDEC',
     'float' : 'FLOATDEC',
     'print' : 'PRINT',
     'boolean' : 'BOOLDEC',
-    'string' : 'STRINGDEC'
+    'string' : 'STRINGDEC',
+    '<=' : 'LEQ',
+    '>=' : 'MEQ',
+    '==' : 'EQ',
+    '!=' : 'NEQ',
+    'and' : 'AND',
+    'or' : 'OR'
  }
 
 tokens = [
@@ -133,6 +137,22 @@ def p_is_assing_s(p):
         p[0].val = p[2].val
         p[0].childrens = [p[2]]
 
+def p_statement_declare_boolean(p):
+    '''statement : BOOLDEC NAME is_assign_b ';' '''
+    names[p[2]] = { "type": "BOOLEAN", "value":p[3].val}
+    varname = Node(p[2],'BOOLEAN')
+    n = Node('assign','=', [varname, p[3]])
+    abstractTree.childrens.append(n)
+
+def p_is_assing_b(p):
+    '''is_assign_b : "=" expression_b
+                    | '''
+    p[0] = Node("false", 'BOOLEAN')
+    if len(p)>2:
+        p[0].type = p[2].type
+        p[0].val = p[2].val
+        p[0].childrens = [p[2]]
+
 def p_statement_print(p):
     '''statement : PRINT '(' expression ')' ';' '''
     n = Node(p[3],'PRINT', [p[3]])
@@ -146,6 +166,7 @@ def p_statement_assign(p):
     names[p[1]]["value"] = p[3]
     id = Node(p[1],'ID')
     n = Node('=','ASSIGN',[id,p[3]])
+    abstractTree.childrens.append(n)
 
 def p_statement_assign_string(p):
     '''statement : NAME "=" expression_s ';' '''
@@ -154,10 +175,21 @@ def p_statement_assign_string(p):
     names[p[1]]["value"] = p[3]
     id = Node(p[1],'ID')
     n = Node('=','ASSIGN',[id,p[3]])
+    abstractTree.childrens.append(n)
+
+def p_statement_assign_boolean(p):
+    '''statement : NAME "=" expression_b ';' '''
+    if p[1] not in names:
+        print ( "You must declare a variable before using it")
+    names[p[1]]["value"] = p[3]
+    id = Node(p[1],'ID')
+    n = Node('=','ASSIGN',[id,p[3]])
+    abstractTree.childrens.append(n)
 
 def p_statement_expr(p):
     '''statement : expression ';'
-                  | expression_s ';' '''
+                  | expression_s ';' 
+                  | expression_b ';' '''
     # print(p[1])
 
 
@@ -216,6 +248,57 @@ def p_expression_name(p):
         print("Undefined name '%s'" % p[1])
         p[0] = 0
 
+def p_expression_b_multiple(p):
+    '''expression_b : expression_b AND expression_b
+                    | expression_b OR expression_b'''
+    if p[2] == 'and':
+        p[0] = Node('and','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] + p[3]
+    elif p[2] == 'or':
+        p[0] = Node('or','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] - p[3]
+
+def p_expression_b_bool(p):
+    '''expression_b : BOOLEAN'''
+    p[0] = Node(p[1],'BOOLEAN')
+
+def p_expression_b_boolcompnums(p):
+    '''expression_b : num '<' num
+                    | num '>' num
+                    | num EQ num
+                    | num NEQ num
+                    | num LEQ num
+                    | num MEQ num '''
+    if p[2] == '<':
+        p[0] = Node('<','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] + p[3]
+    elif p[2] == '>':
+        p[0] = Node('>','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] - p[3]
+    elif p[2] == '==':
+        p[0] = Node('==','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] * p[3]
+    elif p[2] == '!=':
+        p[0] = Node('!=','OPERATION',[p[1],p[3]])
+        #p[0] = p[1] / p[3]
+    elif p[2] == '>=':
+        p[0] = Node('>=','OPERATION',[p[1],p[3]])
+    elif p[2] == '<=':
+        p[0] = Node('<=','OPERATION',[p[1],p[3]])
+    
+def p_num(p):
+    '''num : INUMBER
+            | FNUMBER'''
+
+def p_expression_b_name(p):
+    '''expression_b : NAME'''
+    try:
+        p[0] = names[p[1]]["value"]
+        p[0] = Node(p[1],"BOOLEAN")
+    except LookupError:
+        print("Undefined name '%s'" % p[1])
+        p[0] = 0
+
 def p_expression_s_multiple(p):
     '''expression_s : expression_s '+' expression_s'''
     p[0] = Node('+','CONCATENACION',[p[1],p[3]])
@@ -228,7 +311,7 @@ def p_expression_s_name(p):
     "expression_s : NAME"
     try:
         p[0] = names[p[1]]["value"]
-        p[0] = Node(p[1],"ID")
+        p[0] = Node(p[1],"STRING")
     except LookupError:
         print("Undefined name '%s'" % p[1])
         p[0] = 0
