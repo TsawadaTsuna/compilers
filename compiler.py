@@ -1,7 +1,7 @@
 import ply.yacc as yacc
 import ply.lex as lex
 
-literals = ['=', '+', '-', '*', '/', '(', ')','"', ';','<','>']
+literals = ['=', '+', '-', '*', '/', '(', ')','"', ';','<','>','{','}']
 reserved = { 
     'int' : 'INTDEC',
     'float' : 'FLOATDEC',
@@ -13,7 +13,12 @@ reserved = {
     '==' : 'EQ',
     '!=' : 'NEQ',
     'and' : 'AND',
-    'or' : 'OR'
+    'or' : 'OR',
+    'if' : 'IF',
+    'elif' : 'ELIF',
+    'else' : 'ELSE',
+    'while' : 'WHILE',
+    'for' : 'FOR'
  }
 
 tokens = [
@@ -69,7 +74,7 @@ precedence = (
 
 # dictionary of names
 names = {}
-
+nodes=[]
 
 class Node:
     childrens=[]
@@ -79,19 +84,36 @@ class Node:
         self.val=val
         self.type=type
         self.childrens=childrens
+
+    def __str__(self):
+        return "val: " +str(self.val)+" type: "+str(self.type)
     
     def printTree(self, node, lv):
+        if lv<4:
+            print(" "*lv + str(node))
+        #print(lv)
+        l = node.childrens.copy()
+        if l:
+            for n in l:
+                self.printTree(n,lv+1)
+    
+    def addToList(self, node, lv, lis):
         if lv<10:
             print(" "*lv + str(node.val))
+            lis.append(str(lv) +": "+node.val)
         #print(lv)
         l = node.childrens.copy()
         for n in l:
-            self.printTree(n,lv+1)
+            self.addToList(n,lv+1,lis)
 
 abstractTree = Node("inicio","inicio")
 
+def p_statement(p):
+    'statement : stmt'
+    abstractTree.childrens.append(p[1])
+
 def p_statement_declare_int(p):
-    '''statement : INTDEC NAME is_assing ';'
+    '''stmt : INTDEC NAME is_assing ';'
     '''
     if type(p[3])==float:
         print("no se puede asignar flotantes a enteros")
@@ -99,15 +121,22 @@ def p_statement_declare_int(p):
         names[p[2]] = { "type": "INT", "value":p[3].val}
         varname = Node(p[2],'INT')
         n = Node('assign','=', [varname, p[3]])
-        abstractTree.childrens.append(n)
+        #abstractTree.childrens.append(n)
+        p[0]=n
+        print(n)
+        print("int assign")
         #names[p[2]] = { "type": "INT", "value":p[3]}
 
 def p_statement_declare_float(p):
-    '''statement : FLOATDEC NAME is_assing ';' '''
+    '''stmt : FLOATDEC NAME is_assing ';' '''
     names[p[2]] = { "type": "FLOAT", "value":p[3].val}
     varname = Node(p[2],'FLOAT')
+    print(varname)
     n = Node('assign','=', [varname, p[3]])
-    abstractTree.childrens.append(n)
+    #abstractTree.childrens.append(n)
+    p[0]=n
+    print(n)
+    print("float assign")
     #print(p)
 
 def p_is_assing(p):
@@ -118,15 +147,19 @@ def p_is_assing(p):
     if len(p)>2:
         p[0].type = p[2].type
         p[0].val = p[2].val
-        p[0].childrens = [p[2]]
+        p[0].childrens = p[2].childrens
         #p[0] = p[2]
+    print(p[0])
 
 def p_statement_declare_string(p):
-    '''statement : STRINGDEC NAME is_assign_s ';' '''
+    '''stmt : STRINGDEC NAME is_assign_s ';' '''
     names[p[2]] = { "type": "STRING", "value":p[3].val}
     varname = Node(p[2],'STRING')
     n = Node('assign','=', [varname, p[3]])
-    abstractTree.childrens.append(n)
+    #abstractTree.childrens.append(n)
+    p[0]=n
+    print(n)
+    print("string assign")
 
 def p_is_assing_s(p):
     '''is_assign_s : "=" expression_s
@@ -136,13 +169,17 @@ def p_is_assing_s(p):
         p[0].type = p[2].type
         p[0].val = p[2].val
         p[0].childrens = [p[2]]
+    print(p[0])
 
 def p_statement_declare_boolean(p):
-    '''statement : BOOLDEC NAME is_assign_b ';' '''
+    '''stmt : BOOLDEC NAME is_assign_b ';' '''
     names[p[2]] = { "type": "BOOLEAN", "value":p[3].val}
     varname = Node(p[2],'BOOLEAN')
     n = Node('assign','=', [varname, p[3]])
-    abstractTree.childrens.append(n)
+    #abstractTree.childrens.append(n)
+    p[0]=n
+    print(n)
+    print("boolean assign")
 
 def p_is_assing_b(p):
     '''is_assign_b : "=" expression_b
@@ -152,46 +189,92 @@ def p_is_assing_b(p):
         p[0].type = p[2].type
         p[0].val = p[2].val
         p[0].childrens = [p[2]]
+    print(p[0])
 
 def p_statement_print(p):
-    '''statement : PRINT '(' expression ')' ';' '''
-    n = Node(p[3],'PRINT', [p[3]])
-    abstractTree.childrens.append(n)
-    print(p[3].val)
+    '''stmt : PRINT '(' expression ')' ';' '''
+    n = Node('PRINT','PRINT', [p[3]])
+    #abstractTree.childrens.append(n)
+    p[0]=n
+    print(n)
+    print("print finish")
+    #print(p[3].val)
 
 def p_statement_assign(p):
-    '''statement : NAME "=" expression ';' '''
+    '''stmt : NAME "=" expression ';' '''
     if p[1] not in names:
         print ( "You must declare a variable before using it")
     names[p[1]]["value"] = p[3]
     id = Node(p[1],'ID')
     n = Node('=','ASSIGN',[id,p[3]])
-    abstractTree.childrens.append(n)
+    #abstractTree.childrens.append(n)
+    p[0]=n
+    print(n)
+    print("number assign")
 
 def p_statement_assign_string(p):
-    '''statement : NAME "=" expression_s ';' '''
+    '''stmt : NAME "=" expression_s ';' '''
     if p[1] not in names:
         print ( "You must declare a variable before using it")
     names[p[1]]["value"] = p[3]
     id = Node(p[1],'ID')
     n = Node('=','ASSIGN',[id,p[3]])
-    abstractTree.childrens.append(n)
+    #abstractTree.childrens.append(n)
+    p[0]=n
+    print(n)
+    print("string assign")
 
 def p_statement_assign_boolean(p):
-    '''statement : NAME "=" expression_b ';' '''
+    '''stmt : NAME "=" expression_b ';' '''
     if p[1] not in names:
         print ( "You must declare a variable before using it")
     names[p[1]]["value"] = p[3]
     id = Node(p[1],'ID')
     n = Node('=','ASSIGN',[id,p[3]])
-    abstractTree.childrens.append(n)
+    #abstractTree.childrens.append(n)
+    p[0]=n
+    print(n)
+    print("boolean assign")
 
 def p_statement_expr(p):
-    '''statement : expression ';'
+    '''stmt : expression ';'
                   | expression_s ';' 
                   | expression_b ';' '''
-    # print(p[1])
+    #abstractTree.childrens.append(p[1])
+    p[0]=p[1]
+    print(p[1])
 
+def p_statement_if(p):
+    '''stmt : IF "(" expression_b ")" "{" state states "}" elif else'''
+    ifblock = Node("bloque","if",[p[6],p[7]])
+    n = Node("if","IF",[p[3],ifblock,p[9],p[10]])
+    #abstractTree.childrens.append(n)
+    p[0]=n
+    print(n)
+    print("IF-ELIF-ELSE block")
+
+def p_elif(p):
+    '''elif : ELIF "(" expression_b ")" "{" state states "}"
+            | '''
+    elifbck = Node("bloque","elif",[p[6],p[7]])
+    n = Node("elif","ELIF",[p[3],elifbck])
+    p[0]=n
+    print(n)
+
+def p_else(p):
+    '''else : ELSE "{" state states "}"
+            | '''
+    elsebck=Node("bloque","else",[p[3],p[4]])
+    n=Node("else","ELSE",[elsebck])
+    p[0]=n
+    print(n)
+
+def p_state(p):
+    '''state : stmt
+            | '''
+
+def p_states(p):
+    '''states : state'''
 
 def p_expression_binop(p):
     '''expression : expression '+' expression
@@ -214,29 +297,34 @@ def p_expression_binop(p):
     elif p[2] == '^':
         p[0] = Node('^','OPERATION',[p[1],p[3]])
         #p[0] = p[1] ** p[3]
+    print(p[0])
 
 
 def p_expression_uminus(p):
     "expression : '-' expression %prec UMINUS"
     p[0] = Node(-p[2].val,p[2].type,p[2].childrens)
+    print(p[0])
     #p[0] = -p[2]
 
 
 def p_expression_group(p):
     "expression : '(' expression ')'"
-    p[0] = Node(p[2].val,p[2].type,p[2].children)
+    p[0] = p[2]
+    print(p[0])
 
 
 def p_expression_inumber(p):
     "expression : INUMBER"
     #p[0] = p[1]
     p[0] = Node(p[1], 'INT')
+    print(p[0])
 
 
 def p_expression_fnumber(p):
     "expression : FNUMBER"
     #p[0] = p[1]
     p[0] = Node(p[1], 'FLOAT')
+    print(p[0])
 
 
 def p_expression_name(p):
@@ -244,6 +332,7 @@ def p_expression_name(p):
     try:
         p[0] = names[p[1]]["value"]
         p[0] = Node(p[1],"ID")
+        print(p[0])
     except LookupError:
         print("Undefined name '%s'" % p[1])
         p[0] = 0
@@ -257,14 +346,16 @@ def p_expression_b_multiple(p):
     elif p[2] == 'or':
         p[0] = Node('or','OPERATION',[p[1],p[3]])
         #p[0] = p[1] - p[3]
+    print(p[0])
 
 def p_expression_b_bool(p):
     '''expression_b : BOOLEAN'''
     p[0] = Node(p[1],'BOOLEAN')
+    print(p[0])
 
 def p_expression_b_boolcompnums(p):
-    '''expression_b : num '<' num
-                    | num '>' num
+    '''expression_b : num "<" num
+                    | num ">" num
                     | num EQ num
                     | num NEQ num
                     | num LEQ num
@@ -285,16 +376,21 @@ def p_expression_b_boolcompnums(p):
         p[0] = Node('>=','OPERATION',[p[1],p[3]])
     elif p[2] == '<=':
         p[0] = Node('<=','OPERATION',[p[1],p[3]])
+    print(p[0])
     
 def p_num(p):
     '''num : INUMBER
-            | FNUMBER'''
+            | FNUMBER
+            | NAME'''
+    p[0] = Node(p[1],'NUMBER')
+    print(p[0])
 
 def p_expression_b_name(p):
     '''expression_b : NAME'''
     try:
         p[0] = names[p[1]]["value"]
         p[0] = Node(p[1],"BOOLEAN")
+        print(p[0])
     except LookupError:
         print("Undefined name '%s'" % p[1])
         p[0] = 0
@@ -306,16 +402,19 @@ def p_expression_s_multiple(p):
                     | expression '+' expression_s
                     | expression_b '+' expression_s '''
     p[0] = Node('+','CONCATENACION',[p[1],p[3]])
+    print(p[0])
 
 def p_expression_s_string(p):
     'expression_s : STRING'
     p[0] = Node(p[1],'STRING')
+    print(p[0])
 
 def p_expression_s_name(p):
     "expression_s : NAME"
     try:
         p[0] = names[p[1]]["value"]
         p[0] = Node(p[1],"STRING")
+        print(p[0])
     except LookupError:
         print("Undefined name '%s'" % p[1])
         p[0] = 0
@@ -344,4 +443,6 @@ while i<1:
         yacc.parse(line)
         line=file.readline()
     i=i+1
-    #abstractTree.printTree(abstractTree,0)
+#abstractTree.printTree(abstractTree,0)
+    #abstractTree.addToList(abstractTree,0,nodes)
+    #print(nodes)
