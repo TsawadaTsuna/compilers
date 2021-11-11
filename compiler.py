@@ -249,6 +249,7 @@ def p_statement_if(p):
     ifblock = Node("bloque","if",[p[6],p[7]])
     n = Node("if","IF",[p[3],ifblock,p[9],p[10]])
     #abstractTree.childrens.append(n)
+    print(ifblock)
     p[0]=n
     print(n)
     print("IF-ELIF-ELSE block")
@@ -259,6 +260,7 @@ def p_elif(p):
     elifbck = Node("bloque","elif",[p[6],p[7]])
     n = Node("elif","ELIF",[p[3],elifbck])
     p[0]=n
+    print(elifbck)
     print(n)
 
 def p_else(p):
@@ -267,14 +269,28 @@ def p_else(p):
     elsebck=Node("bloque","else",[p[3],p[4]])
     n=Node("else","ELSE",[elsebck])
     p[0]=n
+    print(elsebck)
+    print(n)
+
+def p_while(p):
+    '''stmt : WHILE "(" expression_b ")" "{" state states "}" '''
+    whilebck = Node("bloque","while",[p[6],p[7]])
+    n=Node("while","WHILE",[p[3],whilebck])
+    p[0]=n
+    print(whilebck)
     print(n)
 
 def p_state(p):
     '''state : stmt
             | '''
+    if len(p) >1:
+        p[0]=p[1]
+    print(p[0])
 
 def p_states(p):
     '''states : state'''
+    p[0]=p[1]
+    print(p[0])
 
 def p_expression_binop(p):
     '''expression : expression '+' expression
