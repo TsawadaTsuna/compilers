@@ -1,17 +1,13 @@
 import ply.yacc as yacc
 import ply.lex as lex
 
-literals = ['=', '+', '-', '*', '/', '(', ')','"', ';','<','>','{','}']
+literals = ['=', '+', '-', '*', '/', '(', ')','"', ';','<','>','{','}','!']
 reserved = { 
     'int' : 'INTDEC',
     'float' : 'FLOATDEC',
     'print' : 'PRINT',
     'boolean' : 'BOOLDEC',
     'string' : 'STRINGDEC',
-    '<=' : 'LEQ',
-    '>=' : 'MEQ',
-    '==' : 'EQ',
-    '!=' : 'NEQ',
     'and' : 'AND',
     'or' : 'OR',
     'if' : 'IF',
@@ -109,7 +105,7 @@ class Node:
 abstractTree = Node("inicio","inicio")
 
 def p_statement(p):
-    'statement : stmt'
+    'statement : state states'
     abstractTree.childrens.append(p[1])
 
 def p_statement_declare_int(p):
@@ -279,16 +275,54 @@ def p_while(p):
     p[0]=n
     print(whilebck)
     print(n)
+    print("WHILE block")
+
+def p_for(p):
+    '''stmt : FOR "(" NAME "=" num ";" expression_b ";" step ")" "{" state states "}" '''
+    forbck = Node("bloque","for",[p[12],p[13]])
+    assign = Node("=","assign",[p[3],p[5]])
+    n=Node("for","FOR",[assign,p[7],p[9],forbck])
+    print(assign)
+    print(forbck)
+    print(n)
+    p[0]=n
+    print("FOR block")
+
+
+def p_step(p):
+    '''step : NAME "+" "=" num
+            | NAME "-" "=" num
+            | NAME "*" "=" num
+            | NAME "/" "=" num
+            | NAME "+" "+"
+            | NAME "-" "-" '''
+    if len(p)==4:
+        if p[2] == '+':
+            p[0] = Node("++","step",[p[1]])
+        else:
+            p[0] = Node("--","step",[p[1]])
+    else:
+        if p[2] == '+':
+            p[0]=Node("+","step",[p[1],p[4]])
+        elif p[2] == '-':
+            p[0]=Node("-","step",[p[1],p[4]])
+        elif p[2] == '*':
+            p[0]=Node("*","step",[p[1],p[4]])
+        elif p[2] == '/':
+            p[0]=Node("/","step",[p[1],p[4]])
+    print(p[0])
 
 def p_state(p):
-    '''state : stmt
+    '''state : stmt state
             | '''
-    if len(p) >1:
-        p[0]=p[1]
+    if len(p) >2:
+        if not p[1]==None: 
+            p[0]=Node(p[1].val,p[1].type,p[1].childrens.append(p[2]))
     print(p[0])
 
 def p_states(p):
-    '''states : state'''
+    '''states : state
+                | '''
     p[0]=p[1]
     print(p[0])
 
@@ -372,26 +406,29 @@ def p_expression_b_bool(p):
 def p_expression_b_boolcompnums(p):
     '''expression_b : num "<" num
                     | num ">" num
-                    | num EQ num
-                    | num NEQ num
-                    | num LEQ num
-                    | num MEQ num '''
+                    | num "=" "=" num
+                    | num "!" "=" num
+                    | num "<" "=" num
+                    | num ">" "=" num '''
     if p[2] == '<':
-        p[0] = Node('<','OPERATION',[p[1],p[3]])
+        if p[3] == '=':
+            p[0] = Node('<=','OPERATION',[p[1],p[4]])
+        else:
+            p[0] = Node('<','OPERATION',[p[1],p[3]])
         #p[0] = p[1] + p[3]
     elif p[2] == '>':
-        p[0] = Node('>','OPERATION',[p[1],p[3]])
+        if p[3] == '=':
+            p[0] = Node('>=','OPERATION',[p[1],p[4]])
+        else:
+            p[0] = Node('>','OPERATION',[p[1],p[3]])
         #p[0] = p[1] - p[3]
-    elif p[2] == '==':
-        p[0] = Node('==','OPERATION',[p[1],p[3]])
+    elif p[2] == '=':
+        p[0] = Node('==','OPERATION',[p[1],p[4]])
         #p[0] = p[1] * p[3]
-    elif p[2] == '!=':
-        p[0] = Node('!=','OPERATION',[p[1],p[3]])
+    elif p[2] == '!':
+        p[0] = Node('!=','OPERATION',[p[1],p[4]])
         #p[0] = p[1] / p[3]
-    elif p[2] == '>=':
-        p[0] = Node('>=','OPERATION',[p[1],p[3]])
-    elif p[2] == '<=':
-        p[0] = Node('<=','OPERATION',[p[1],p[3]])
+    
     print(p[0])
     
 def p_num(p):
@@ -454,10 +491,12 @@ while i<1:
         break
     if not s:
         continue
+    source = ""
     line = file.readline()
     while(line):
-        yacc.parse(line)
+        source=source+line
         line=file.readline()
+    yacc.parse(source)
     i=i+1
 #abstractTree.printTree(abstractTree,0)
     #abstractTree.addToList(abstractTree,0,nodes)
