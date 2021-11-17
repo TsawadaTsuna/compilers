@@ -1,3 +1,17 @@
-float a = 3
-int b
-print(a)
+float a = 3;
+string b = "hola" + 3;
+print(a);
+if(a<3){ 
+    print(a); 
+    print(3);
+}elif(b<4){
+    int b = 2;
+}else{
+    print(true);
+}
+while(a!=3 and b==4){
+    print(b);
+}
+for(i=1;i<10;i++){
+    print(i);
+}
