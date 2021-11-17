@@ -1,3 +1,4 @@
+import re
 import ply.yacc as yacc
 import ply.lex as lex
 
@@ -478,8 +479,29 @@ def p_error(p):
     else:
         print("Syntax error at EOF")
 
-
 parser = yacc.yacc()
+
+def parsefile(inputfile):
+    try:
+        #s = input('Nombre de archivo:\n ')
+        file = open(inputfile,"r")
+    except EOFError:
+        return False
+    if not inputfile:
+        return False
+    source = ""
+    line = file.readline()
+    while(line):
+        source=source+line
+        line=file.readline()
+    try:
+        yacc.parse(source)
+        return True
+    except:
+        return False
+parsefile("code.txt")
+print("end")
+'''
 i=0
 while i<1:
     i=i+1
@@ -500,3 +522,4 @@ while i<1:
 #abstractTree.printTree(abstractTree,0)
     #abstractTree.addToList(abstractTree,0,nodes)
     #print(nodes)
+    '''
