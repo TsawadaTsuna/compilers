@@ -1,0 +1,17 @@
+float a = 3;
+string b = "hola" + 3;
+if(a<3){ 
+    print(a); 
+    boolean g = true;
+}elif(b<4){
+    int b = 2 * 3;
+}else{
+    print(true);
+}
+while(a!=3 and 3==4){
+    print(b);
+}
+int i;
+for(i=0;i<10;i++){
+    print(i);
+}
