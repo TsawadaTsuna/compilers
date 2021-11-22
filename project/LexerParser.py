@@ -198,6 +198,24 @@ def p_statement_print(p):
     #print("print finish")
     #print(p[3].val)
 
+def p_statement_printstring(p):
+    '''stmt : PRINT '(' expression_s ')' ';' '''
+    n = Node('PRINT','PRINT', [p[3]])
+    #abstractTree.childrens.append(n)
+    p[0]=n
+    #print(n)
+    #print("print finish")
+    #print(p[3].val)
+
+def p_statement_printbool(p):
+    '''stmt : PRINT '(' expression_b ')' ';' '''
+    n = Node('PRINT','PRINT', [p[3]])
+    #abstractTree.childrens.append(n)
+    p[0]=n
+    #print(n)
+    #print("print finish")
+    #print(p[3].val)
+
 def p_statement_assign(p):
     '''stmt : NAME "=" expression ';' '''
     if p[1] not in names:
@@ -398,7 +416,7 @@ def p_expression_name(p):
     "expression : NAME"
     try:
         p[0] = names[p[1]]["value"]
-        p[0] = Node(p[1],names[p[1]]["type"])
+        p[0] = Node(p[1],"ID")
         #print(p[0])
     except LookupError:
         print("Undefined name '%s'" % p[1])
@@ -465,7 +483,7 @@ def p_numfloat(p):
 def p_numname(p):
     '''num : NAME'''
     try:
-        p[0] = Node(p[1],names[p[1]]["type"])
+        p[0] = Node(p[1],"ID")
     except:
         print("Undefined name '%s'" % p[1])
     #print(p[0])
@@ -474,7 +492,7 @@ def p_expression_b_name(p):
     '''expression_b : NAME'''
     try:
         p[0] = names[p[1]]["value"]
-        p[0] = Node(p[1],"BOOLEAN")
+        p[0] = Node(p[1],"ID")
         #print(p[0])
     except LookupError:
         print("Undefined name '%s'" % p[1])
@@ -498,7 +516,7 @@ def p_expression_s_name(p):
     "expression_s : NAME"
     try:
         p[0] = names[p[1]]["value"]
-        p[0] = Node(p[1],"STRING")
+        p[0] = Node(p[1],"ID")
         #print(p[0])
     except LookupError:
         print("Undefined name '%s'" % p[1])

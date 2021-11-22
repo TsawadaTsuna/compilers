@@ -59,10 +59,12 @@ def generateTestTree():
     
 #Arbol de pruebas   
 tree=generateTestTree()
-
+#parsefile("code.txt")
+#tree=abstractTree
 
 #globalvars = SymbolTable("Global",id(tree))
 symboltables=[]
+
 def getScopeTable(id):
     for t in symboltables:
         if t.block==id:
@@ -70,42 +72,46 @@ def getScopeTable(id):
     return None
 
 def createScopes(node,parentScope):
-    actualScope = SymbolTable(node.val,id(node),parentScope)
-    symboltables.append(actualScope)
-    for hijo in node.childrens:
-        if hijo.type == "=":
-            actualScope.addVar(hijo.childrens[0].val,hijo.childrens[0].type)
-        elif hijo.type == "IF":
-            createScopes(hijo,actualScope)
-            addVariablesOfBlock(hijo.childrens[1],actualScope)
-        elif hijo.type == "ELIF":
-            createScopes(hijo,parentScope)
-            addVariablesOfBlock(hijo.childrens[1],actualScope)
-        elif hijo.type == "ELSE":
-            createScopes(hijo,parentScope)
-            addVariablesOfBlock(hijo.childrens[0],actualScope)
-        elif hijo.type == "WHILE":
-            createScopes(hijo,actualScope)
-            addVariablesOfBlock(hijo.childrens[1],actualScope)
-        elif hijo.type == "FOR":
-            createScopes(hijo,actualScope)
-            addVariablesOfBlock(hijo.childrens[3],actualScope)
+    if node:
+        actualScope = SymbolTable(node.val,id(node),parentScope)
+        symboltables.append(actualScope)
+        for hijo in node.childrens:
+            if hijo:
+                if hijo.type == "=":
+                    actualScope.addVar(hijo.childrens[0].val,hijo.childrens[0].type)
+                elif hijo.type == "IF":
+                    addVariablesOfBlock(hijo.childrens[1],actualScope)
+                    createScopes(hijo,actualScope)
+                elif hijo.type == "ELIF":
+                    addVariablesOfBlock(hijo.childrens[1],actualScope)
+                    createScopes(hijo,parentScope)
+                elif hijo.type == "ELSE":
+                    addVariablesOfBlock(hijo.childrens[0],actualScope)
+                    createScopes(hijo,parentScope)
+                elif hijo.type == "WHILE":
+                    addVariablesOfBlock(hijo.childrens[1],actualScope)
+                    createScopes(hijo,actualScope)
+                elif hijo.type == "FOR":
+                    addVariablesOfBlock(hijo.childrens[3],actualScope)
+                    createScopes(hijo,actualScope)
         
 
 def addVariablesOfBlock(node,scope):
-    for hijo in node.childrens:
-        if hijo.type == "=":
-            scope.addVar(hijo.childrens[0].val,hijo.childrens[0].type)
-        elif hijo.type == "IF":
-            createScopes(hijo,scope)
-        elif hijo.type == "ELIF":
-            createScopes(hijo,scope)
-        elif hijo.type == "ELSE":
-            createScopes(hijo,scope)
-        elif hijo.type == "WHILE":
-            createScopes(hijo,scope)
-        elif hijo.type == "FOR":
-            createScopes(hijo,scope)
+    if node:
+        for hijo in node.childrens:
+            if hijo:
+                if hijo.type == "=":
+                    scope.addVar(hijo.childrens[0].val,hijo.childrens[0].type)
+                elif hijo.type == "IF":
+                    createScopes(hijo,scope)
+                elif hijo.type == "ELIF":
+                    createScopes(hijo,scope)
+                elif hijo.type == "ELSE":
+                    createScopes(hijo,scope)
+                elif hijo.type == "WHILE":
+                    createScopes(hijo,scope)
+                elif hijo.type == "FOR":
+                    createScopes(hijo,scope)
         
 
 createScopes(tree,None)
