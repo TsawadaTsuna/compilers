@@ -531,8 +531,8 @@ def parsefile(inputfile):
         return True
     except:
         return False
-print(parsefile("code.txt"))
-print("end")
+#print(parsefile("code.txt"))
+#print("end")
 '''
 i=0
 while i<1:

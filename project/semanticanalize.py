@@ -2,26 +2,28 @@ from LexerParser import Node, abstractTree, names, parsefile
 
 class SymbolTable:
     parent=None
-    variables={}
+    variables=dict({})
     id=''
-    children=None
+    #children=None
     block=0
     def __init__(self,id,block,parent=None):
         self.id=id
         self.parent=parent
         self.block=block
-        if parent:
-            parent.children=[self]
+        self.variables=dict({})
+        #if parent:
+            #parent.children=[self]
             #parent.children.append(self)
 
     def printInfo(self):
         print("id: ",self.id)
         if self.parent:
             print("parent: ", self.parent.id)
-        if self.children:
-            print("children:")
-            for c in self.children:
-                print(c.id)
+        print("variables: ", self.variables)
+        #if self.children:
+            #print("children:")
+            #for c in self.children:
+                #print(c.id)
     
     def addVar(self,name,type):
         self.variables[name]=type
@@ -39,11 +41,13 @@ def generateTestTree():
     elif1=Node("elif","ELIF",[Node("<","OPERATION",[Node("b","STRING"),Node("4","INT")]),
     Node("bloque","elif",[Node("assign","=",[Node("b","INT"),Node("*","OPERATION",[Node("2","INT"),Node("3","INT")])])])])
     else1=Node("else","ELSE",[Node("bloque","else",[Node("PRINT","PRINT",[Node("true","BOOLEAN")])])])
-    if1=Node("if","IF",[Node("<","OPERATION",[Node("a","FLOAT"),Node("3","INT")]),Node("bloque","if",[Node("PRINT","PRINT",[Node("a","FLOAT")])]),elif1,else1])
+    if1=Node("if","IF",[Node("<","OPERATION",[Node("a","FLOAT"),Node("3","INT")]),Node("bloque","if",[Node("PRINT","PRINT",[Node("a","FLOAT")]),Node("assign","=",[Node("g","BOOLEAN"),Node("true","BOOLEAN")])]),elif1,else1])
     tree.childrens.append(if1)
     while1=Node("while","WHILE",[Node("and","OPERATION",[Node("!=","OPERTION",[Node("a","FLOAT")]),Node("==","OPERATION",[Node("3","INT"),Node("4","INT")])]),
     Node("bloque","while",[Node("PRINT","PRINT",[Node("b","STRING")])])])
     tree.childrens.append(while1)
+    assign3=Node("assign","=",[Node("i","INT"),Node("0","INT")])
+    tree.childrens.append(assign3)
     assignfor=Node("assign","=",[Node("i","INT"),Node("0","INT")])
     compfor=Node("<","OPERATION",[Node("i","INT"),Node("10","INT")])
     stepfor=Node("+","step",[Node("i","INT"),Node("1","INT")])
@@ -53,11 +57,60 @@ def generateTestTree():
 
     return tree
     
+#Arbol de pruebas   
 tree=generateTestTree()
-#Lista de tablas de simbolos, cada tabla tendra su id i una referencia al subarbol para ver que sea de ese bloque especifico
-#cambiar todo lo del proyecto a un folder
 
-globalvars = SymbolTable("Global",id(tree))
-symboltables=[globalvars]
+
+#globalvars = SymbolTable("Global",id(tree))
+symboltables=[]
+def getScopeTable(id):
+    for t in symboltables:
+        if t.block==id:
+            return t
+    return None
+
+def createScopes(node,parentScope):
+    actualScope = SymbolTable(node.val,id(node),parentScope)
+    symboltables.append(actualScope)
+    for hijo in node.childrens:
+        if hijo.type == "=":
+            actualScope.addVar(hijo.childrens[0].val,hijo.childrens[0].type)
+        elif hijo.type == "IF":
+            createScopes(hijo,actualScope)
+            addVariablesOfBlock(hijo.childrens[1],actualScope)
+        elif hijo.type == "ELIF":
+            createScopes(hijo,parentScope)
+            addVariablesOfBlock(hijo.childrens[1],actualScope)
+        elif hijo.type == "ELSE":
+            createScopes(hijo,parentScope)
+            addVariablesOfBlock(hijo.childrens[0],actualScope)
+        elif hijo.type == "WHILE":
+            createScopes(hijo,actualScope)
+            addVariablesOfBlock(hijo.childrens[1],actualScope)
+        elif hijo.type == "FOR":
+            createScopes(hijo,actualScope)
+            addVariablesOfBlock(hijo.childrens[3],actualScope)
+        
+
+def addVariablesOfBlock(node,scope):
+    for hijo in node.childrens:
+        if hijo.type == "=":
+            scope.addVar(hijo.childrens[0].val,hijo.childrens[0].type)
+        elif hijo.type == "IF":
+            createScopes(hijo,scope)
+        elif hijo.type == "ELIF":
+            createScopes(hijo,scope)
+        elif hijo.type == "ELSE":
+            createScopes(hijo,scope)
+        elif hijo.type == "WHILE":
+            createScopes(hijo,scope)
+        elif hijo.type == "FOR":
+            createScopes(hijo,scope)
+        
+
+createScopes(tree,None)
+for t in symboltables:
+    t.printInfo()
+#print(symboltables[0].printInfo())
 print("a")
 
