@@ -33,25 +33,25 @@ class SymbolTable:
 tree=None
 def generateTestTree():
     tree = Node("inicio","inicio")
-    assign1=Node("assign","=",[Node("a","FLOAT"),Node("3","INT")])
+    assign1=Node("assign","=",[Node("a","FLOAT",isvar=True),Node("3","INT")])
     tree.childrens.append(assign1)
     op1=Node("+","CONCTENACION",[Node("hola","STRING"),Node("3","INT")])
-    assign2=Node("assign","=",[Node("b","STRING"),op1])
+    assign2=Node("assign","=",[Node("b","STRING",isvar=True),op1])
     tree.childrens.append(assign2)
-    elif1=Node("elif","ELIF",[Node("<","OPERATION",[Node("b","STRING"),Node("4","INT")]),
-    Node("bloque","elif",[Node("assign","=",[Node("b","INT"),Node("*","OPERATION",[Node("2","INT"),Node("3","INT")])])])])
+    elif1=Node("elif","ELIF",[Node("<","OPERATION",[Node("b","STRING",isvar=True),Node("4","INT")]),
+    Node("bloque","elif",[Node("assign","=",[Node("b","INT",isvar=True),Node("*","OPERATION",[Node("2","INT"),Node("3","INT")])])])])
     else1=Node("else","ELSE",[Node("bloque","else",[Node("PRINT","PRINT",[Node("true","BOOLEAN")])])])
-    if1=Node("if","IF",[Node("<","OPERATION",[Node("a","FLOAT"),Node("3","INT")]),Node("bloque","if",[Node("PRINT","PRINT",[Node("a","FLOAT")]),Node("assign","=",[Node("g","BOOLEAN"),Node("true","BOOLEAN")])]),elif1,else1])
+    if1=Node("if","IF",[Node("<","OPERATION",[Node("a","FLOAT",isvar=True),Node("3","INT")]),Node("bloque","if",[Node("PRINT","PRINT",[Node("a","FLOAT",isvar=True)]),Node("assign","=",[Node("g","BOOLEAN",isvar=True),Node("true","BOOLEAN")])]),elif1,else1])
     tree.childrens.append(if1)
-    while1=Node("while","WHILE",[Node("and","OPERATION",[Node("!=","OPERTION",[Node("a","FLOAT")]),Node("==","OPERATION",[Node("3","INT"),Node("4","INT")])]),
-    Node("bloque","while",[Node("PRINT","PRINT",[Node("b","STRING")])])])
+    while1=Node("while","WHILE",[Node("and","OPERATION",[Node("!=","OPERTION",[Node("a","FLOAT",isvar=True)]),Node("==","OPERATION",[Node("3","INT"),Node("4","INT")])]),
+    Node("bloque","while",[Node("PRINT","PRINT",[Node("b","STRING",isvar=True)])])])
     tree.childrens.append(while1)
-    assign3=Node("assign","=",[Node("i","INT"),Node("0","INT")])
+    assign3=Node("assign","=",[Node("i","INT",isvar=True),Node("0","INT")])
     tree.childrens.append(assign3)
-    assignfor=Node("assign","=",[Node("i","INT"),Node("0","INT")])
-    compfor=Node("<","OPERATION",[Node("i","INT"),Node("10","INT")])
-    stepfor=Node("+","step",[Node("i","INT"),Node("1","INT")])
-    bloquefor=Node("bloque","for",[Node("PRINT","PRINT",[Node("i","INT")])])
+    assignfor=Node("assign","=",[Node("i","INT",isvar=True),Node("0","INT")])
+    compfor=Node("<","OPERATION",[Node("i","INT",isvar=True),Node("10","INT")])
+    stepfor=Node("+","step",[Node("i","INT",isvar=True),Node("1","INT")])
+    bloquefor=Node("bloque","for",[Node("PRINT","PRINT",[Node("i","INT",isvar=True)])])
     for1=Node("for","FOR",[assignfor,compfor,stepfor,bloquefor])
     tree.childrens.append(for1)
 
@@ -113,10 +113,56 @@ def addVariablesOfBlock(node,scope):
                 elif hijo.type == "FOR":
                     createScopes(hijo,scope)
         
+def checkScopes(node,scope):
+    if not scope:
+        actualScope = getScopeTable(id(node))
+    else:
+        actualScope=scope
+    if node:
+        for hijo in node.childrens:
+            if hijo:
+                if hijo.type == "IF":
+                    subcheck=checkScopes(hijo,None)
+                    if not subcheck:
+                        return False
+                elif hijo.type == "ELIF":
+                    subcheck=checkScopes(hijo,None)
+                    if not subcheck:
+                        return False
+                elif hijo.type == "ELSE":
+                    subcheck=checkScopes(hijo,None)
+                    if not subcheck:
+                        return False
+                elif hijo.type == "WHILE":
+                    subcheck=checkScopes(hijo,None)
+                    if not subcheck:
+                        return False
+                elif hijo.type == "FOR":
+                    subcheck=checkScopes(hijo,None)
+                    if not subcheck:
+                        return False
+                elif hijo.isvar:
+                    if not checkVariable(hijo.childrens[0].val,actualScope):
+                        return False
+                else:
+                    subcheck=checkScopes(hijo,actualScope)
+                    if not subcheck:
+                        return False
+    return True
+
+def checkVariable(var,scope):
+    if not scope:
+        return False
+    else:
+        if var in scope.variables:
+            return True
+        else:
+            checkVariable(var,scope.parent)
 
 createScopes(tree,None)
 for t in symboltables:
     t.printInfo()
+print(checkScopes(tree,None))
 #print(symboltables[0].printInfo())
 print("a")
 

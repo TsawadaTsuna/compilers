@@ -77,10 +77,12 @@ class Node:
     childrens=[]
     val=''
     type=''
-    def __init__(self, val, type, childrens=[]):
+    isvar=False
+    def __init__(self, val, type, childrens=[],isvar=False):
         self.val=val
         self.type=type
         self.childrens=childrens
+        self.isvar=True
 
     def __str__(self):
         return "val: " +str(self.val)+" type: "+str(self.type)
@@ -116,7 +118,7 @@ def p_statement_declare_int(p):
         print("no se puede asignar flotantes a enteros")
     else:
         names[p[2]] = { "type": "INT", "value":p[3].val}
-        varname = Node(p[2],'INT')
+        varname = Node(p[2],'INT',isvar=True)
         n = Node('assign','=', [varname, p[3]])
         #abstractTree.childrens.append(n)
         p[0]=n
@@ -127,7 +129,7 @@ def p_statement_declare_int(p):
 def p_statement_declare_float(p):
     '''stmt : FLOATDEC NAME is_assing ';' '''
     names[p[2]] = { "type": "FLOAT", "value":p[3].val}
-    varname = Node(p[2],'FLOAT')
+    varname = Node(p[2],'FLOAT',isvar=True)
     #print(varname)
     n = Node('assign','=', [varname, p[3]])
     #abstractTree.childrens.append(n)
@@ -151,7 +153,7 @@ def p_is_assing(p):
 def p_statement_declare_string(p):
     '''stmt : STRINGDEC NAME is_assign_s ';' '''
     names[p[2]] = { "type": "STRING", "value":p[3].val}
-    varname = Node(p[2],'STRING')
+    varname = Node(p[2],'STRING',isvar=True)
     n = Node('assign','=', [varname, p[3]])
     #abstractTree.childrens.append(n)
     p[0]=n
@@ -171,7 +173,7 @@ def p_is_assing_s(p):
 def p_statement_declare_boolean(p):
     '''stmt : BOOLDEC NAME is_assign_b ';' '''
     names[p[2]] = { "type": "BOOLEAN", "value":p[3].val}
-    varname = Node(p[2],'BOOLEAN')
+    varname = Node(p[2],'BOOLEAN',isvar=True)
     n = Node('assign','=', [varname, p[3]])
     #abstractTree.childrens.append(n)
     p[0]=n
@@ -222,7 +224,7 @@ def p_statement_assign(p):
         print ( "You must declare a variable before using it")
     names[p[1]]["value"] = p[3]
     if names[p[1]]["type"] != "FLOAT" or names[p[1]]["type"]!="INT":
-        id = Node(p[1],'ID')
+        id = Node(p[1],names[p[1]]["type"],isvar=True)
         n = Node('=','ASSIGN',[id,p[3]])
         #abstractTree.childrens.append(n)
         p[0]=n
@@ -237,7 +239,7 @@ def p_statement_assign_string(p):
         print ( "You must declare a variable before using it")
     names[p[1]]["value"] = p[3]
     if names[p[1]]["type"] != "STRING":
-        id = Node(p[1],'ID')
+        id = Node(p[1],'STRING',isvar=True)
         n = Node('=','ASSIGN',[id,p[3]])
         #abstractTree.childrens.append(n)
         p[0]=n
@@ -252,7 +254,7 @@ def p_statement_assign_boolean(p):
         print ( "You must declare a variable before using it")
     names[p[1]]["value"] = p[3]
     if names[p[1]]["type"]!="BOOLEAN":
-        id = Node(p[1],names[p[1]]["type"])
+        id = Node(p[1],names[p[1]]["type"],isvar=True)
         n = Node('=','ASSIGN',[id,p[3]])
         #abstractTree.childrens.append(n)
         p[0]=n
@@ -311,7 +313,7 @@ def p_for(p):
     try:
         if names[p[3]]["type"] == "INT"  or names[p[3]]["type"] == "FLOAT":
             forbck = Node("bloque","for",[p[12],p[13]])
-            assign = Node("assign","=",[p[3],p[5]])
+            assign = Node("assign","=",[Node(p[3],names[p[3]]["type"],isvar=True),p[5]])
             n=Node("for","FOR",[assign,p[7],p[9],forbck])
             #print(assign)
             #print(forbck)
@@ -333,18 +335,18 @@ def p_step(p):
             | NAME "-" "-" '''
     if len(p)==4:
         if p[2] == '+':
-            p[0] = Node("+","step",[p[1],Node("1","INT")])
+            p[0] = Node("+","step",[Node(p[1],names[p[1]]["type"],isvar=True),Node("1","INT")])
         else:
-            p[0] = Node("-","step",[p[1],Node("1","INT")])
+            p[0] = Node("-","step",[Node(p[1],names[p[1]]["type"],isvar=True),Node("1","INT")])
     else:
         if p[2] == '+':
-            p[0]=Node("+","step",[p[1],p[4]])
+            p[0]=Node("+","step",[Node(p[1],names[p[1]]["type"],isvar=True),p[4]])
         elif p[2] == '-':
-            p[0]=Node("-","step",[p[1],p[4]])
+            p[0]=Node("-","step",[Node(p[1],names[p[1]]["type"],isvar=True),p[4]])
         elif p[2] == '*':
-            p[0]=Node("*","step",[p[1],p[4]])
+            p[0]=Node("*","step",[Node(p[1],names[p[1]]["type"],isvar=True),p[4]])
         elif p[2] == '/':
-            p[0]=Node("/","step",[p[1],p[4]])
+            p[0]=Node("/","step",[Node(p[1],names[p[1]]["type"],isvar=True),p[4]])
     #print(p[0])
 
 def p_state(p):
@@ -416,7 +418,7 @@ def p_expression_name(p):
     "expression : NAME"
     try:
         p[0] = names[p[1]]["value"]
-        p[0] = Node(p[1],"ID")
+        p[0] = Node(p[1],names[p[1]]["type"],isvar=True)
         #print(p[0])
     except LookupError:
         print("Undefined name '%s'" % p[1])
@@ -483,7 +485,7 @@ def p_numfloat(p):
 def p_numname(p):
     '''num : NAME'''
     try:
-        p[0] = Node(p[1],"ID")
+        p[0] = Node(p[1],names[p[1]]["type"],isvar=True)
     except:
         print("Undefined name '%s'" % p[1])
     #print(p[0])
@@ -492,7 +494,7 @@ def p_expression_b_name(p):
     '''expression_b : NAME'''
     try:
         p[0] = names[p[1]]["value"]
-        p[0] = Node(p[1],"ID")
+        p[0] = Node(p[1],"BOOLEAN")
         #print(p[0])
     except LookupError:
         print("Undefined name '%s'" % p[1])
@@ -516,7 +518,7 @@ def p_expression_s_name(p):
     "expression_s : NAME"
     try:
         p[0] = names[p[1]]["value"]
-        p[0] = Node(p[1],"ID")
+        p[0] = Node(p[1],"STRING",isvar=True)
         #print(p[0])
     except LookupError:
         print("Undefined name '%s'" % p[1])
