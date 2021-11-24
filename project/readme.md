@@ -4,14 +4,14 @@ Realizado por Kevin Contreras - A01635597
 
 Estructura
 ----------
-*LexerParser*
+**LexerParser**
 Archivo que contiene las reglas de produccion y los tokens, ademas aqui mismo verifica tipos 
 usando diferentes expresiones para reconocer primitivos
 
-*semanticanalize*
+**semanticanalize**
 Su principal funcion es realizar verificacion del uso de variables enter scopes
 
-*tac*
+**tac**
 genera el codigo de tres direcciones
 
 Features y consideraciones

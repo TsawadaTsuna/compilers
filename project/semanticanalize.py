@@ -36,7 +36,7 @@ def generateTestTree():
     tree = Node("inicio","inicio")
     assign1=Node("assign","=",[Node("a","FLOAT",isvar=True),Node("3","INT")])
     tree.childrens.append(assign1)
-    op1=Node("+","CONCTENACION",[Node("hola","STRING"),Node("3","INT")])
+    op1=Node("+","CONCTENACION",[Node("\"hola\"","STRING"),Node("3","INT")])
     assign2=Node("assign","=",[Node("b","STRING",isvar=True),op1])
     tree.childrens.append(assign2)
     elif1=Node("elif","ELIF",[Node("<","OPERATION",[Node("b","STRING",isvar=True),Node("4","INT")]),
