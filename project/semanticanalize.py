@@ -1,4 +1,5 @@
 from LexerParser import Node, abstractTree, names, parsefile
+from copy import deepcopy
 
 class SymbolTable:
     parent=None
@@ -10,7 +11,7 @@ class SymbolTable:
         self.id=id
         self.parent=parent
         self.block=block
-        self.variables=dict({})
+        self.variables=deepcopy(dict({}))
         #if parent:
             #parent.children=[self]
             #parent.children.append(self)
@@ -163,6 +164,8 @@ createScopes(tree,None)
 for t in symboltables:
     t.printInfo()
 print(checkScopes(tree,None))
+#if not checkScopes(tree,None):
+    #exit("Missmatch scope")
 #print(symboltables[0].printInfo())
-print("a")
+#print("a")
 
