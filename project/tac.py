@@ -73,7 +73,7 @@ def genBlock(node,auxtmp,auxbck):
                 elif ifhijo.type == "ELSE":
                     if ifhijo.childrens[0]:
                         nauxt,nauxb=genBlock(ifhijo.childrens[0],naux,auxbck)
-                        file.write("ELSEGOTO L"+str(nauxb-1)+"\n")
+                        bck=bck+("ELSEGOTO L"+str(nauxb-1)+"\n")
                         auxtmp=nauxt
                         auxbck=nauxb
     #code
