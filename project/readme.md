@@ -28,7 +28,10 @@ Los booleanos basico van en minuscula (true, false)
 Estructura del arbol
 --------------------
 
-Ver imagen 
+Ver imagen "abstract tree estructura.png"
 
 Notas o comentarios
 -------------------
+Profe por cuestiones de tiempo y otras materias no alcanze a terminar
+Esta cada feture en un archivo pero no se mezclan bien
+La parte de scopes y tac las hice con un arbol generado de prueba
