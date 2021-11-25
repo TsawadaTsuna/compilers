@@ -8,15 +8,34 @@ T4 IFGOTO L1
 T7 = b < 4
 T7 ELSEIFGOTO L2
 ELSEGOTO L3
+T11 = 3 == 4
+T12 = true and T11
+T12 IFGOTO L4
 i = 0
-T11 = true and false
-print T11
+i = 0
+T16 = i < 10
+T16 IFGOTO L5
+T19 = true and false
+print T19
+
 L1
 print a
 g = true
+
 L2
 T8 = 2 * 3
 b = T8
+
 L3
 T8 = true and false
 print T8
+
+L4
+print b
+T12 IFGOTO L4
+
+L5
+print i
+i = i + 1
+T16 = i < 10
+T16 IFGOTO L5

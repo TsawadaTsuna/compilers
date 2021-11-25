@@ -44,7 +44,7 @@ def generateTestTree():
     else1=Node("else","ELSE",[Node("bloque","else",[Node("PRINT","PRINT",[Node("and","OPERATION",[Node("true","BOOLEAN"),Node("false","BOOLEAN")])])])])
     if1=Node("if","IF",[Node("<","OPERATION",[Node("a","FLOAT",isvar=True),Node("3","INT")]),Node("bloque","if",[Node("PRINT","PRINT",[Node("a","FLOAT",isvar=True)]),Node("assign","=",[Node("g","BOOLEAN",isvar=True),Node("true","BOOLEAN")])]),elif1,else1])
     tree.childrens.append(if1)
-    while1=Node("while","WHILE",[Node("and","OPERATION",[Node("!=","OPERTION",[Node("a","FLOAT",isvar=True)]),Node("==","OPERATION",[Node("3","INT"),Node("4","INT")])]),
+    while1=Node("while","WHILE",[Node("and","OPERATION",[Node("true","BOOLEAN"),Node("==","OPERATION",[Node("3","INT"),Node("4","INT")])]),
     Node("bloque","while",[Node("PRINT","PRINT",[Node("b","STRING",isvar=True)])])])
     tree.childrens.append(while1)
     assign3=Node("assign","=",[Node("i","INT",isvar=True),Node("0","INT")])
