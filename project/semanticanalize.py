@@ -1,4 +1,5 @@
 from LexerParser import Node, abstractTree, names, parsefile
+from copy import deepcopy
 
 class SymbolTable:
     parent=None
@@ -10,7 +11,7 @@ class SymbolTable:
         self.id=id
         self.parent=parent
         self.block=block
-        self.variables=dict({})
+        self.variables=deepcopy(dict({}))
         #if parent:
             #parent.children=[self]
             #parent.children.append(self)
@@ -33,17 +34,17 @@ class SymbolTable:
 tree=None
 def generateTestTree():
     tree = Node("inicio","inicio")
-    assign1=Node("assign","=",[Node("a","FLOAT",isvar=True),Node("3","INT")])
+    assign1=Node("assign","=",[Node("a","FLOAT",isvar=True),Node("+","OPERATION",[Node("3","INT"),Node("-","OPERATION",[Node("5","INT"),Node("4","INT")])])])
     tree.childrens.append(assign1)
-    op1=Node("+","CONCTENACION",[Node("hola","STRING"),Node("3","INT")])
+    op1=Node("+","CONCTENACION",[Node("\"hola\"","STRING"),Node("3","INT")])
     assign2=Node("assign","=",[Node("b","STRING",isvar=True),op1])
     tree.childrens.append(assign2)
     elif1=Node("elif","ELIF",[Node("<","OPERATION",[Node("b","STRING",isvar=True),Node("4","INT")]),
     Node("bloque","elif",[Node("assign","=",[Node("b","INT",isvar=True),Node("*","OPERATION",[Node("2","INT"),Node("3","INT")])])])])
-    else1=Node("else","ELSE",[Node("bloque","else",[Node("PRINT","PRINT",[Node("true","BOOLEAN")])])])
+    else1=Node("else","ELSE",[Node("bloque","else",[Node("PRINT","PRINT",[Node("and","OPERATION",[Node("true","BOOLEAN"),Node("false","BOOLEAN")])])])])
     if1=Node("if","IF",[Node("<","OPERATION",[Node("a","FLOAT",isvar=True),Node("3","INT")]),Node("bloque","if",[Node("PRINT","PRINT",[Node("a","FLOAT",isvar=True)]),Node("assign","=",[Node("g","BOOLEAN",isvar=True),Node("true","BOOLEAN")])]),elif1,else1])
     tree.childrens.append(if1)
-    while1=Node("while","WHILE",[Node("and","OPERATION",[Node("!=","OPERTION",[Node("a","FLOAT",isvar=True)]),Node("==","OPERATION",[Node("3","INT"),Node("4","INT")])]),
+    while1=Node("while","WHILE",[Node("and","OPERATION",[Node("true","BOOLEAN"),Node("==","OPERATION",[Node("3","INT"),Node("4","INT")])]),
     Node("bloque","while",[Node("PRINT","PRINT",[Node("b","STRING",isvar=True)])])])
     tree.childrens.append(while1)
     assign3=Node("assign","=",[Node("i","INT",isvar=True),Node("0","INT")])
@@ -54,6 +55,8 @@ def generateTestTree():
     bloquefor=Node("bloque","for",[Node("PRINT","PRINT",[Node("i","INT",isvar=True)])])
     for1=Node("for","FOR",[assignfor,compfor,stepfor,bloquefor])
     tree.childrens.append(for1)
+    print1=Node("PRINT","PRINT",[Node("and","OPERATION",[Node("true","BOOLEAN"),Node("false","BOOLEAN")])])
+    tree.childrens.append(print1)
 
     return tree
     
@@ -163,6 +166,8 @@ createScopes(tree,None)
 for t in symboltables:
     t.printInfo()
 print(checkScopes(tree,None))
+#if not checkScopes(tree,None):
+    #exit("Missmatch scope")
 #print(symboltables[0].printInfo())
-print("a")
+#print("a")
 
